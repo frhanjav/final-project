@@ -207,6 +207,7 @@ func (m *PoolManager) acquireTier(forceTier *int) (int, func(), error) {
 		}
 
 		ctr.Busy = true
+		m.mu.Unlock()
 		return tier, func() {
 			m.mu.Lock()
 			ctr.Busy = false
@@ -493,8 +494,10 @@ func (m *PoolManager) createResidentContainer(ctx context.Context, tier int, pau
 		opCtx,
 		&container.Config{
 			Image: m.cfg.ImageName,
-			Cmd:   []string{"sleep", "infinity"},
-			Tty:   false,
+			// BusyBox sleep in alpine images does not support "infinity".
+			// Use a simple shell loop so resident warm containers stay alive reliably.
+			Cmd: []string{"sh", "-c", "while true; do sleep 3600; done"},
+			Tty: false,
 			Labels: map[string]string{
 				"simulator-tier": strconv.Itoa(tier),
 			},
