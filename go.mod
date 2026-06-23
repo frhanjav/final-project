@@ -5,8 +5,7 @@ go 1.25.0
 require github.com/docker/docker v24.0.9+incompatible
 
 replace github.com/distribution/reference => ./third_party/distribution_reference
-replace github.com/docker/go-connections => ./third_party/docker_go_connections
-replace github.com/docker/go-connections => ./third_party/docker_go_connections
+
 replace github.com/docker/go-connections => ./third_party/docker_go_connections
 
 require (
