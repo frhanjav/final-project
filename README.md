@@ -15,8 +15,10 @@ The gateway exposes `POST /invoke`, logs per-request metrics to `metrics.csv`, a
 - `gateway.go`: `/invoke` and `/healthz` handlers.
 - `pool.go`: Docker tier management, request routing, warm-up, and eviction.
 - `metrics.go`: CSV logging.
+- `cmd/loadtest/main.go`: configurable load generator for repeatable experiments.
 - `Dockerfile` and `task.py`: mock FaaS runtime image.
 - `plot.py`: chart generation for your report.
+- `scripts/run_thesis_workload.sh`: runs baseline, burst, eviction, and high-concurrency scenarios.
 
 ## Setup
 
@@ -102,6 +104,24 @@ docker ps -a
 
 During active periods you should see the resident Tier 1 and Tier 2 containers. After the idle timeout they should disappear.
 
+## Load Testing
+
+For repeatable experiments, use the built-in Go load generator:
+
+```bash
+go run ./cmd/loadtest -label cold-baseline -force-tier 0 -total 20 -rps 5 -concurrency 1
+go run ./cmd/loadtest -label auto-burst -total 200 -rps 100 -concurrency 32
+go run ./cmd/loadtest -label high-concurrency -seconds 3 -rps 1000 -concurrency 128 -duration-ms 50
+```
+
+Each run appends a row to `loadtest_summary.csv` with throughput, latency percentiles, and tier counts.
+
+To execute the thesis workload end to end against a running server:
+
+```bash
+./scripts/run_thesis_workload.sh
+```
+
 ## Generate Graphs
 
 Install plotting dependencies:
@@ -119,4 +139,7 @@ python3 plot.py
 This creates:
 
 - `avg_latency_by_tier.png`
+- `avg_latency_by_tier_all_requests.png`
 - `pool_size_over_time.png`
+- `latency_over_time_by_tier.png`
+- `loadtest_latency_summary.png` when `loadtest_summary.csv` exists
